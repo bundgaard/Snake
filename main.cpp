@@ -9,6 +9,22 @@
 constexpr int WIDTH = 640;
 constexpr int HEIGHT = 480;
 
+static SDL_Texture *createFont(SDL_Renderer *renderer, const char *text, TTF_Font *font, const SDL_Color &color)
+{
+    SDL_Surface *surface = TTF_RenderText_Blended(font, text, color);
+    SDL_Texture *texture = SDL_CreateTextureFromSurface(renderer, surface);
+    SDL_FreeSurface(surface);
+    return texture;
+}
+
+static SDL_Rect measureText(TTF_Font *font, const char *text, int pos_x, int pos_y)
+{
+    int fontWidth;
+    int fontHeight;
+    TTF_SizeText(font, text, &fontWidth, &fontHeight);
+    return (SDL_Rect) {pos_x, pos_y, fontWidth, fontHeight};
+}
+
 int main()
 {
 
@@ -32,19 +48,22 @@ int main()
                                    WIDTH, HEIGHT, 0);
     auto renderer = SDL_CreateRenderer(window, 0, SDL_RENDERER_ACCELERATED);
     auto font = TTF_OpenFont(
-            "/opt/fonts/font.otf", 36);
+            "/opt/fonts/font.ttf", 36);
+
     const char *text = "SNAKE";
-    auto helloWorldSurface = TTF_RenderText_Blended(font, text, SDL_Color{255, 255, 0, 255});
-    auto snakeWord = SDL_CreateTextureFromSurface(renderer, helloWorldSurface);
-    int fontWidth;
-    int fontHeight;
+    auto snakeTextTexture = createFont(renderer, text, font, SDL_Color{255, 255, 0, 255});
 
-    SDL_FreeSurface(helloWorldSurface);
-    TTF_SizeText(font, text, &fontWidth, &fontHeight);
-    SDL_Rect fontRect = {10, 10, fontWidth, fontHeight};
+    const char *deathText = "Your worm died";
+    auto deadTexture = createFont(renderer, deathText, font, SDL_Color{255, 64, 128, 255});
 
-    int x = WIDTH / 2, y = HEIGHT / 2, x_dir = 0, y_dir = 0;
+    auto fontRect = measureText(font, text, 10,10);
 
+
+    int x = WIDTH / 2,
+            y = HEIGHT / 2,
+            x_dir = 0,
+            y_dir = 0;
+    auto deathTextRect = measureText(font, deathText, x, y);
     bool quit = false;
     SDL_Event event;
     SDL_Rect snake_head = {.x = x, .y = y, .w = 10, .h = 10};
@@ -171,9 +190,10 @@ int main()
 #endif
 
         if (x_dir == 0 && y_dir == 0)
-        { SDL_RenderCopy(renderer, snakeWord, nullptr, &fontRect); }
+        { SDL_RenderCopy(renderer, snakeTextTexture, nullptr, &fontRect); }
 
 
+        SDL_RenderCopy(renderer, deadTexture, nullptr, &deathTextRect);
         // FOOD
         SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255);
         SDL_RenderFillRect(renderer, &food_rect);
@@ -194,7 +214,7 @@ int main()
     }
 
 
-    SDL_DestroyTexture(snakeWord);
+    SDL_DestroyTexture(snakeTextTexture);
     TTF_CloseFont(font);
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);

@@ -3,5 +3,5 @@ project(Snake)
 
 set(CMAKE_CXX_STANDARD 20)
 
-add_executable(Snake main.cpp)
-target_link_libraries(Snake SDL2 SDL2_ttf fftw)
+add_executable(Snake main.cpp Snake.cpp Snake.h)
+target_link_libraries(Snake SDL2 SDL2_ttf)
